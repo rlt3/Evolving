@@ -1,8 +1,9 @@
 #include <cstdlib>
 #include <cstdio>
-#include <signal.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <signal.h>
+#include <ucontext.h>
 
 enum INST {
     MOV,
@@ -40,16 +41,32 @@ unsigned char *byte = NULL;
 /* 
  * Write a nop slide to safely exit the assembly section to start handling the
  * next Program generated.
- * TODO: would be cool if somehow I could get the pc of the instruction that
- * caused the segfault rather than the access'd memory address. This way I can
- * test that the instruction came from the assembly section of mmap'd memory.
  */
 static void
-segfault_handler (int sig, siginfo_t *info, void *context)
+segfault_handler (int sig, siginfo_t *info, void *u)
 {
+    struct ucontext_t *context = (struct ucontext_t*) u;
+    /* 
+     * struct mcontext_t is machine dependent and opaque on purpose. It is used
+     * for restoring the context and we could increment the REG_RIP value and
+     * that would skip to the next instruction (but that could be bad). We 
+     * instead use it to know if the faulting instruction is in the expected
+     * location.
+     */
+    long long fault_addr = context->uc_mcontext.gregs[REG_RIP];
+    long long assem_addr = (long long) virt;
+
     if (sig != SIGSEGV)
         return;
-    printf("caught segfault at %p\n", info->si_addr);
+
+    /* TODO: doing IO in signal handlers is bad, but ... */
+    if (fault_addr < assem_addr || fault_addr > assem_addr + num_bytes) {
+        printf("Segfault\n");
+        exit(1);
+    }
+
+    printf("caught segfault at %llx. bad memory address %p. virt %llx\n", 
+            fault_addr, info->si_call_addr, assem_addr);
     /* write nops for the entire buffer */
     memset(virt, 0x90, num_bytes);
     /* ret instruction for last byte */
@@ -115,6 +132,10 @@ int main(int argc, char *argv[])
     assembly func = (assembly) virt;
     func();
     printf("after: %d\n", value);
+
+    /* test segfault */
+    char *b = NULL;
+    *b = 5;
 
     return 0;
 }
