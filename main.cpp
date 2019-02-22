@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
     assembly func;
 
     virt = mmap(NULL, virt_bytes,
-                PROT_READ | PROT_WRITE,
+                PROT_READ | PROT_WRITE | PROT_EXEC,
                 MAP_ANONYMOUS | MAP_PRIVATE,
                 0, 0);
     byte = (unsigned char *) virt;
@@ -137,7 +137,6 @@ int main(int argc, char *argv[])
     printf("before: %d\n", value);
     virt_exec();
     func(&value);
-    virt_write();
     printf("after: %d\n", value);
 
     /* test segfault */
