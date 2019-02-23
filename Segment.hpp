@@ -39,6 +39,7 @@ public:
             perror(strerror(errno));
             exit(1);
         }
+        Segment::set_signal_handler((void*) Segment::signal_handler);
     }
 
     /* Reset the signal handler to its default actions */

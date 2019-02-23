@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
      *  movq    $1337, %(rdi)
      *  ret
      */
-    byte[0] = 0x88;
+    byte[0] = 0x48;
     byte[1] = 0xc7;
     byte[2] = 0x07;
     byte[3] = 0x39;
@@ -56,8 +56,8 @@ int main(int argc, char *argv[])
     printf("after: %d\n", value);
 
     /* test segfault */
-    //char *b = NULL;
-    //*b = 5;
+    char *b = NULL;
+    *b = 5;
 
     return 0;
 }
