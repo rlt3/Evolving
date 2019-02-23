@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <string.h>
 #include <signal.h>
+#include <assert.h>
 #include <unistd.h>
 #include <ucontext.h>
 #include <stdint.h>
@@ -28,6 +29,11 @@ public:
     static uint64_t addr_beg;
     static uint64_t addr_end;
 
+    /*
+     * By default, the length of a segment is the length of a page size because
+     * executable memory must be page aligned. Next step (if needed) is to have
+     * a constructor which defines multiples of the pagesize as the length.
+     */
     Segment ()
         : seg_len(getpagesize())
     {
@@ -53,7 +59,7 @@ public:
     write (uint8_t *bytes, uint32_t length)
     {
         Segment::set_prot(seg, seg_len, PROT_WRITE);
-        memset(seg, 0, this->seg_len);
+        memset(seg, 0, seg_len);
         memcpy(seg, bytes, length);
     }
 
@@ -85,15 +91,11 @@ public:
         uint64_t fault_addr = context->uc_mcontext.gregs[REG_RIP];
         uint32_t len = Segment::addr_end - Segment::addr_beg;
         uint8_t *seg = (uint8_t *) Segment::addr_beg;
-
-        if (!(sig == SIGSEGV || sig == SIGILL)) {
-            printf("GOT: %d\n", sig);
-            return;
-        }
+        assert((sig == SIGSEGV || sig == SIGILL));
 
         /* 
-         * If the segfault is a real one (not caused by our mutation memory
-         * segment) then remove the handler and return, leting the program
+         * If the signal is a real one (not caused by our mutation memory
+         * segment) then remove the handler and return, letting the program's
          * instruction raise the signal again naturally.
          */
         if (fault_addr < Segment::addr_beg || fault_addr > Segment::addr_end) {
@@ -104,6 +106,7 @@ public:
         printf("caught signal %d at %p. bad memory address %p. virt %p\n", 
                 sig, (void*) fault_addr, info->si_call_addr, (void*) Segment::addr_beg);
 
+        assert(seg && len > 0);
         Segment::set_prot(seg, len, PROT_WRITE);
         /* write nops for the entire buffer */
         memset(seg, 0x90, len);
