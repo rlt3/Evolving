@@ -122,7 +122,7 @@ main (int argc, char *argv[])
     int value = 42;
 
     /*
-     *  movq    $1337, %(rdi)
+     *  movq    $1337, (%rdi)
      *  ret
      */
     byte[0] = 0x44;
