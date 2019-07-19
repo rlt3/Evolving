@@ -43,17 +43,17 @@ main (int argc, char **argv)
         exit(1);
     }
 
-    uint8_t payload[] = {
-        0x55,
-        0x48, 0x89, 0xe5,
-        0x48, 0x89, 0x7d, 0xf8,
-        0x48, 0xc7, 0x07, 0xa3, 0x1c, 0x00, 0x00,
-        0x90,
-        0x5d,
-        0xc3
-    };
-    uint32_t payload_len = sizeof(payload);
-    memcpy(landing, payload, payload_len);
+    //uint8_t payload[] = {
+    //    0x55,
+    //    0x48, 0x89, 0xe5,
+    //    0x48, 0x89, 0x7d, 0xf8,
+    //    0x48, 0xc7, 0x07, 0xa3, 0x1c, 0x00, 0x00,
+    //    0x90,
+    //    0x5d,
+    //    0xc3
+    //};
+    //uint32_t payload_len = sizeof(payload);
+    //memcpy(landing, payload, payload_len);
 
     int val = 1;
     landing(&val);
