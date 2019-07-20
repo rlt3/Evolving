@@ -4,24 +4,18 @@
 #include <stdint.h>
 #include <errno.h>
 
-void
-payload (void *val)
-{
-    asm(
-        "movq $7331, (%rdi)\n"
-    );
-}
-
-void
-payload_end ()
-{
-}
+/*
+ * Encrypt a particular section in the given binary executable. Read bytes
+ * starting from the hexadecimal value <start> until the hexadecimal value
+ * <end>. Encrypt those bytes with the key and then write those values back in
+ * place.
+ */
 
 void
 scanhex (char *input, uint32_t *output)
 {
     if (sscanf(input, "0x%x", output) < 1) {
-        perror(strerror(errno));
+        fprintf(stderr, "Argument `%s' needs to be a hexadecimal!\n", input);
         exit(1);
     }
 }
@@ -42,7 +36,7 @@ main (int argc, char **argv)
 
     f = fopen(argv[1], "r+");
     if (!f) {
-        perror(strerror(errno));
+        perror(argv[1]);
         exit(1);
     }
 
